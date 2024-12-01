@@ -2,52 +2,95 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 
-# Page Configuration
-st.set_page_config(page_title="Water Management Dashboard", layout="wide")
 
-# Title
-st.title("Water Management Dashboard")
+THRESHOLD = 10
+materials = ['Shower', 'Bathtub', 'Faucet', 'Washing Machine', 'Dishwasher',
+             'Water Heater', 'Irrigation System', 'Water Filter', 'Other']
 
-# Create two columns
-col1, col2 = st.columns([1, 2])  # Adjust column width ratio as [1, 2]
 
-# --- Column 1: Chat with Chatbot ---
+df = pd.read_csv("data/user_data.csv")
+df_melted = df.drop(columns=["Price"]).melt("Month", var_name="Category", value_name="Liters")
+
+user_name = "John Bob"
+current_water_usage = df.iloc[-1]['User Water Usage (liters)']
+city_threshold = f"{THRESHOLD} liters"
+
+
+# App layout
+st.set_page_config(layout="wide")
+st.title("Water Usage")
+
+# User details
+col1, col2 = st.columns(2)
 with col1:
-    st.subheader("Chat with your Assistant")
-    # Create a text input box for chat
-    user_input = st.text_input("Ask...", key="chat_input")
-    if user_input:
-        st.write("You asked:", user_input)
-        st.write("Bot's response: This is where the chatbot's answer will appear.")
+    st.subheader("User Details")
+    st.info(f"**First Name:** {user_name.split()[0]}")
+    st.info(f"**Last Name:** {user_name.split()[1]}")
 
-# --- Column 2: Current Thresholds and Water Consumption ---
 with col2:
-    # Row 1: Current Month Thresholds
-    st.subheader("January")
-    # Replace with dynamic values if needed
-    st.info("City Threshold: 10m³/p\n\nCurrent Threshold: 12m³")
+    st.subheader("Last month Water Usage")
+    st.warning(f"**Water Usage:** {current_water_usage} liters")
+    st.warning(f"**City Threshold:** {city_threshold}")
 
-    # Row 2: Previous Water Consumption Plot
-    st.subheader("Water Consumption")
-    # Example data for the chart
-    data = pd.DataFrame({
-        "Month": ["October", "November", "December"],
-        "City Threshold": [10, 10, 10],
-        "Your Threshold": [5, 12, 18],
-    })
-    # Create a bar chart
-    chart = alt.Chart(data).transform_fold(
-        fold=["City Threshold", "Your Threshold"],  # Columns to show
-        as_=["Threshold Type", "Value"]            # Rename for display
-    ).mark_bar().encode(
-        x=alt.X("Month:N", title="Month"),
-        y=alt.Y("Value:Q", title="Water Consumption (m³)"),
-        # Explicitly define the data type for "Threshold Type"
-        color=alt.Color("Threshold Type:N", title="Type"),
-        # Explicitly define data types in the tooltip
-        tooltip=["Month", "Threshold Type:N", "Value:Q"]
-    ).properties(
-        width="container",
-        height=300
+
+# Users material
+st.subheader("Select Water-Related Materials/Devices")
+
+if "selected_materials" not in st.session_state:
+    st.session_state.selected_materials = []
+
+# Create checkboxes for each material
+cols = st.columns(3)
+
+for i, material in enumerate(materials):
+    col_idx = i % 3
+    with cols[col_idx]:
+        if st.checkbox(material, value=(material in st.session_state.selected_materials)):
+            # Add to session state if selected
+            if material not in st.session_state.selected_materials:
+                st.session_state.selected_materials.append(material)
+        else:
+            # Remove from session state if unchecked
+            if material in st.session_state.selected_materials:
+                st.session_state.selected_materials.remove(material)
+
+# Plots
+col1, col2 = st.columns(2)
+
+st.header("Track your water usage")
+
+chart = (
+    alt.Chart(df_melted)
+    .mark_line(point=True)
+    .encode(
+        x=alt.X("Month:T", title="Month"),
+        y=alt.Y("Liters:Q", title="Liters"),
+        color=alt.Color("Category:N", title="Category"),
+        tooltip=["Month:T", "Category:N", "Liters:Q"],
     )
-    st.altair_chart(chart, use_container_width=True)
+    .properties(
+        width=800,
+        height=400,
+        title="Water Usage Evolution"
+    )
+    .interactive()
+)
+
+price_chart = (
+    alt.Chart(df)
+    .mark_line(color="red", point=True)
+    .encode(
+        x=alt.X("Month:T", title="Month"),
+        y=alt.Y("Price:Q", title="Price (in MAD)"),
+        tooltip=["Month:T", "Price:Q"],
+    )
+    .properties(
+        width=800,
+        height=200,
+        title="Monthly Price Paid (MAD)",
+    )
+    .interactive()
+)
+
+st.altair_chart(price_chart, use_container_width=True)
+st.altair_chart(chart, use_container_width=True)
