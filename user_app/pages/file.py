@@ -1,10 +1,10 @@
+import time
+
 import streamlit as st
-import pandas as pd
+from constants import THRESHOLD
+from data_utils import update_data
 from extractor import PpdExtractor
 from pdf2image import convert_from_bytes
-from data_utils import update_data
-from constants import THRESHOLD
-import time
 
 st.title("File Uploader")
 

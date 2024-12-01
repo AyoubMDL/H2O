@@ -1,11 +1,9 @@
 import io
 
 import streamlit as st
-from PIL import Image
-
-from extractor import ImageExtractor
 from data_utils import update_data
-
+from extractor import ImageExtractor
+from PIL import Image
 
 st.set_page_config(page_title="Scan your water bill", page_icon="📸", layout="wide")
 

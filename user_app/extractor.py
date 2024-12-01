@@ -1,8 +1,7 @@
-from PIL import Image
 import re
-from enum import Enum
-from PyPDF2 import PdfReader
+
 import pytesseract
+from PyPDF2 import PdfReader
 
 pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
 
@@ -30,20 +29,6 @@ class PpdExtractor:
             water_consumption = int(water_consumption[0])
 
         return price, water_consumption
-
-
-class WaterUsageCropRegion(Enum):
-    LEFT = 0.79
-    TOP = 0.12
-    RIGHT = 0.874
-    BOTTOM = 0.1515
-
-
-class PriceCropRegion(Enum):
-    LEFT = 0.67
-    TOP = 0.94
-    RIGHT = 0.778
-    BOTTOM = 1
 
 
 class ImageExtractor:

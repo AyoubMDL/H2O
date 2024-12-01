@@ -1,6 +1,7 @@
+import calendar
+
 import pandas as pd
 from constants import DATA_PATH, THRESHOLD
-import calendar
 
 
 def update_data(price, water_usage, city_threshold=THRESHOLD):
